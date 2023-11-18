@@ -4,6 +4,9 @@ struct ReminderCell: View {
     var reminder: Reminder
 
     @State private var timeRemaining: String = ""
+    @State private var actionSheetVisible: Bool = false
+    
+    var removeReminder: (UUID) -> Void
 
     var body: some View {
         HStack {
@@ -20,24 +23,47 @@ struct ReminderCell: View {
                 }
             }.padding(10)
             Spacer()
-            VStack(alignment: .leading, spacing: 0) {
-                Text(timeRemaining)
-                    .font(.system(size: 20)).fontWeight(.regular).lineSpacing(8).foregroundStyle(.white)
-            }.frame(maxWidth: 120, maxHeight: .infinity).background(Color("BackgroundCellColor2"))
+            if(reminder.date <= Date()){
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("🎉")
+                        .font(.system(size: 30)).fontWeight(.regular).lineSpacing(8).foregroundStyle(.white)
+                }.frame(maxWidth: 120, maxHeight: .infinity).background(Color("BackgroundCellColor2").opacity(0.2))
+            }
+            else {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(timeRemaining)
+                        .font(.system(size: 20)).fontWeight(.regular).lineSpacing(8).foregroundStyle(.white)
+                }.frame(maxWidth: 120, maxHeight: .infinity).background(Color("BackgroundCellColor2"))
+            }
+            
         }
         .frame(maxWidth: .infinity,maxHeight: 70, alignment: .leading)
-        .background(Color("BackgroundCellColor"))
+        .background(
+            reminder.date >= Date() ? Color("BackgroundCellColor") : Color("BackgroundCellColor1")
+        )
         .cornerRadius(15)
         .shadow(radius: 5)
         .onAppear {
             updateTimer()
         }
+        .simultaneousGesture(DragGesture())
+        .onLongPressGesture {
+                    actionSheetVisible.toggle()
+                }
+        .actionSheet(isPresented: $actionSheetVisible){
+                            ActionSheet(title: Text("Delete Reminder"), message: Text("Are you sure you want to delete this reminder?"), buttons: [
+                                .destructive(Text("Delete"), action: {
+                                    removeReminder(reminder.id)
+                                }),
+                                .cancel()
+                            ])
+                        }
     }
     
 
     private func updateTimer() {
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            // Mise à jour de la propriété timeRemaining toutes les secondes
+            
             updateTimeRemaining()
         }
 
@@ -67,13 +93,6 @@ struct ReminderCell: View {
 
 
 
-struct ReminderCell_Previews: PreviewProvider {
-    static var previews: some View {
-        ReminderCell(reminder: Reminder(title: "Meeting", date: Date().addingTimeInterval(322600), emoji: "⏰"))
-            .previewLayout(.sizeThatFits)
-            .padding()
-    }
-}
 
 extension Date {
     func formatted() -> String {

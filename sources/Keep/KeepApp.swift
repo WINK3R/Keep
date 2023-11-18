@@ -11,7 +11,7 @@ import SwiftUI
 struct KeepApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView().ignoresSafeArea(.all, edges: .bottom)
+            ContentView().ignoresSafeArea(.all, edges: .bottom).background(.black)
         }
     }
 }
